@@ -1,13 +1,11 @@
 import os
+import httpx
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
-from google import genai
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
-client = genai.Client(api_key=GEMINI_API_KEY)
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 schedule_context = ""
 
@@ -22,8 +20,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     prompt = f"Текущее время: {now}\n\nРасписание пользователя:\n{schedule_context}\n\nВопрос пользователя: {user_message}\n\nОтвечай кратко и по делу на русском языке."
-    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-    await update.message.reply_text(response.text)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
+            json={
+                "model": "meta-llama/llama-3.3-8b-instruct:free",
+                "messages": [{"role": "user", "content": prompt}]
+            }
+        )
+        result = response.json()
+        answer = result["choices"][0]["message"]["content"]
+
+    await update.message.reply_text(answer)
 
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()

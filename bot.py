@@ -30,7 +30,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
             json={
-                "model": "google/gemma-3-4b-it:free",
+                "model": "google/gemma-3-4b-it",
                 "messages": [{"role": "user", "content": prompt}]
             }
         )

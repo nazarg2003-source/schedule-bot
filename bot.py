@@ -1,14 +1,14 @@
 import os
-import asyncio
 from datetime import datetime
-import anthropic
+import google.generativeai as genai
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 schedule_context = ""
 
@@ -22,16 +22,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ Расписание сохранено! Теперь спрашивайте что угодно.")
         return
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        messages=[{
-            "role": "user",
-            "content": f"Текущее время: {now}\n\nРасписание пользователя:\n{schedule_context}\n\nВопрос пользователя: {user_message}\n\nОтвечай кратко и по делу на русском языке."
-        }]
-    )
-
-    await update.message.reply_text(response.content[0].text)
+    prompt = f"Текущее время: {now}\n\nРасписание пользователя:\n{schedule_context}\n\nВопрос пользователя: {user_message}\n\nОтвечай кратко и по делу на русском языке."
+    response = model.generate_content(prompt)
+    await update.message.reply_text(response.text)
 
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()

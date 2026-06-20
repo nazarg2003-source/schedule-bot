@@ -1,14 +1,13 @@
 import os
 from datetime import datetime
-import google.generativeai as genai
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
+from google import genai
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-pro")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 schedule_context = ""
 
@@ -23,7 +22,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     prompt = f"Текущее время: {now}\n\nРасписание пользователя:\n{schedule_context}\n\nВопрос пользователя: {user_message}\n\nОтвечай кратко и по делу на русском языке."
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
     await update.message.reply_text(response.text)
 
 def main():

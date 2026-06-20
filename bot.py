@@ -26,7 +26,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
             json={
-                "model": "meta-llama/llama-3.3-8b-instruct:free",
+                "model": "mistralai/mistral-7b-instruct:free",
                 "messages": [{"role": "user", "content": prompt}]
             }
         )

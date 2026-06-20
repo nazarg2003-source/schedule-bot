@@ -1,8 +1,12 @@
 import os
 import httpx
+import logging
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
@@ -31,7 +35,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             }
         )
         result = response.json()
-        answer = result["choices"][0]["message"]["content"]
+        logger.info(f"OpenRouter response: {result}")
+        
+        if "choices" in result:
+            answer = result["choices"][0]["message"]["content"]
+        else:
+            answer = f"Ошибка: {result.get('error', result)}"
 
     await update.message.reply_text(answer)
 
